@@ -1,0 +1,32 @@
+<main class="contato-page">
+  <header>
+    <p class="eyebrow">Contato Gamodan</p>
+    <h1>Encontre equipe</h1>
+    <p>Pesquise nome para filtrar lista em tempo real.</p>
+  </header>
+  <form class="search" (submit)="$event.preventDefault()">
+    <label class="sr-only" for="busca">Pesquisar integrante</label
+    ><input
+      id="busca"
+      [value]="busca()"
+      (input)="atualizarBusca($any($event.target).value)"
+      placeholder="Pesquisar..."
+      autocomplete="off"
+    /><button type="button">Buscar</button>
+  </form>
+  <section class="members">
+    @for (membro of membrosFiltrados(); track membro.email) {
+      <article>
+        <strong>{{ membro.nome }}</strong>
+        <div class="links">
+          <a [href]="'mailto:' + membro.email">E-mail</a><span class="separador">|</span
+          ><a [href]="membro.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a
+          ><span class="separador">|</span
+          ><a [href]="membro.github" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </article>
+    } @empty {
+      <p>Nenhuma integrante encontrada.</p>
+    }
+  </section>
+</main>

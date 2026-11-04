@@ -1,0 +1,85 @@
+<main class="lista-page">
+  <section class="lista-shell">
+    <header class="lista-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Sua biblioteca, em um só lugar</p>
+        <h1>Minha lista</h1>
+        <p class="subtitulo">Todos os jogos da sua biblioteca Steam, sincronizados automaticamente com o Gamodan.</p>
+      </div>
+      @if (auth.usuario()?.foto; as foto) {
+        <img class="avatar-lista" [src]="foto" [alt]="'Foto de ' + auth.usuario()?.nome" />
+      }
+    </header>
+
+    @if (!auth.usuario()?.steamLinked) {
+      <section class="steam-state" aria-live="polite">
+        <div class="steam-mark" aria-hidden="true">S</div>
+        <div class="steam-state-copy">
+          <h2>Conecte sua conta Steam</h2>
+          <p>Entre usando a Steam para importar automaticamente os jogos que você possui. Não será necessário adicionar títulos manualmente.</p>
+        </div>
+        <button class="steam-button" type="button" (click)="auth.entrarComSteam()">Conectar Steam</button>
+      </section>
+    } @else {
+      <section class="library-panel" aria-labelledby="library-title">
+        <div class="library-toolbar">
+          <div class="library-heading">
+            <span class="status-dot"></span>
+            <div>
+              <p class="eyebrow">Biblioteca sincronizada</p>
+              <h2 id="library-title">Seus jogos</h2>
+              <p class="library-count">{{ totalGeral() }} jogo(s) encontrados na Steam</p>
+            </div>
+          </div>
+          <button class="refresh-button" type="button" (click)="atualizarBibliotecaSteam()" [disabled]="steam.carregando()">
+            <span aria-hidden="true">↻</span> {{ steam.carregando() ? 'Atualizando...' : 'Sincronizar' }}
+          </button>
+        </div>
+
+        @if (steam.jogos().length > 0) {
+          <label class="busca-jogos">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" placeholder="Buscar um jogo da sua biblioteca..." [value]="buscaSteam()" (input)="buscaSteam.set($any($event.target).value)" />
+            @if (buscaSteam()) {
+              <button type="button" class="clear-search" (click)="buscaSteam.set('')" aria-label="Limpar busca">×</button>
+            }
+          </label>
+        }
+
+        @if (steam.erro()) {
+          <div class="state-message error" role="alert">
+            <strong>Não foi possível carregar sua biblioteca.</strong>
+            <p>{{ steam.erro() }}</p>
+            <button type="button" class="refresh-button" (click)="atualizarBibliotecaSteam()">Tentar novamente</button>
+          </div>
+        } @else if (steam.carregando() && !steam.carregado()) {
+          <div class="state-message"><span class="loader"></span><p>Buscando seus jogos na Steam...</p></div>
+        } @else if (steam.carregado() && steam.jogos().length === 0) {
+          <div class="state-message">
+            <div class="empty-icon">▧</div>
+            <h3>Sua biblioteca está vazia</h3>
+            <p>A Steam não retornou jogos. Confira se os detalhes de jogos estão públicos nas configurações de privacidade da sua conta.</p>
+          </div>
+        } @else if (jogosSteam().length === 0) {
+          <div class="state-message"><h3>Nenhum resultado</h3><p>Não encontramos jogos com esse nome.</p></div>
+        } @else {
+          <div class="steam-owned-grid">
+            @for (jogo of jogosSteam(); track jogo.appId) {
+              <article class="steam-owned-card">
+                <a class="game-cover" [href]="'https://store.steampowered.com/app/' + jogo.appId" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Abrir ' + jogo.nome + ' na Steam'">
+                  <img [src]="jogo.imagem" [alt]="'Capa de ' + jogo.nome" loading="lazy" />
+                  <span class="steam-open" aria-hidden="true">↗</span>
+                </a>
+                <div class="game-info">
+                  <h3>{{ jogo.nome }}</h3>
+                  <span class="playtime">{{ jogo.horas }} h jogadas</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+    <p class="lista-footnote">Os jogos são importados diretamente da Steam. A disponibilidade depende das configurações de privacidade da sua biblioteca.</p>
+  </section>
+</main>

@@ -1,0 +1,274 @@
+<main class="home">
+  @if (auth.autenticado()) {
+    <section class="welcome-block" aria-label="Boas-vindas">
+      <p class="welcome-message">
+        <span
+          class="welcome-typing"
+          [attr.aria-label]="'Bem-vindo(a), ' + (auth.usuario()?.nome ?? '') + '!'"
+        >
+          Bem-vindo(a), {{ auth.usuario()?.nome }}
+        </span>
+      </p>
+    </section>
+  }
+  <section class="hero">
+    <div class="hero-art" [style.background-image]="'url(' + jogoBanner().imagem + ')'"></div>
+    <div class="hero-content">
+      <div class="hero-copy">
+        <p class="hero-eyebrow">Organize <span>•</span> Descubra <span>•</span> interaja </p>
+        <h1>Seu universo de jogos,<br /><span>do seu jeito.</span></h1>
+        <p class="hero-description">
+          Monte sua lista do seu jeito, descubra novos jogos e interaja com a comunidade. Tudo em um só lugar.
+        </p>
+        <a class="hero-cta" routerLink="/lista">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M6.5 9h11a2 2 0 0 1 1.9 1.4l1.1 3.8a2 2 0 0 1-3.2 2l-2.1-1.7H8.8l-2.1 1.7a2 2 0 0 1-3.2-2l1.1-3.8A2 2 0 0 1 6.5 9Z"
+            />
+            <path d="M8 11v3m-1.5-1.5h3M16 12h.01M18 14h.01" />
+          </svg>
+          <span>Explorar jogos</span>
+          <span class="hero-cta-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+      <button type="button" class="hero-game-label" (click)="abrirDetalhes(jogoBanner())">
+        <strong>{{ jogoBanner().nome }}</strong>
+      </button>
+    </div>
+    <div class="hero-games" aria-label="Escolha um jogo em destaque">
+      @for (jogo of jogosEmDestaque(); track jogo.id; let index = $index) {
+        <button
+          type="button"
+          class="hero-game-thumb"
+          [class.ativo]="indiceBanner() === index"
+          [attr.aria-label]="'Mostrar ' + jogo.nome + ' no banner'"
+          [attr.aria-pressed]="indiceBanner() === index"
+          (click)="selecionarBanner(index)"
+        >
+          <img [src]="jogo.imagem" [alt]="''" />
+          <span>{{ jogo.nome }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  @if (auth.autenticado() && auth.admin()) {
+    <div class="toolbar">
+      <button type="button" class="primary" (click)="abrirCatalogo()">Adicionar ao catálogo</button>
+    </div>
+  }
+  <section class="home-carousel" aria-labelledby="destaques-title">
+    <div class="carousel-heading">
+      <div>
+        <p class="carousel-eyebrow">Seleção aleatória</p>
+        <h2 id="destaques-title">Jogos em destaque</h2>
+      </div>
+      <span class="carousel-note">A seleção muda ao recarregar a página</span>
+    </div>
+    <div class="carousel" aria-label="Jogos em destaque">
+      <button type="button" class="arrow" (click)="voltarDestaque()" aria-label="Destaque anterior">
+        ‹
+      </button>
+      <div class="cards">
+        @for (jogo of visiveisDestaque(); track jogo.id) {
+          <article class="game-card center" (click)="abrirDetalhes(jogo)">
+            <img [src]="jogo.imagem" [alt]="jogo.nome" />
+            <div>
+              <h3>{{ jogo.nome }}</h3>
+              <p class="stars" [attr.aria-label]="jogo.estrelas + ' estrelas'">
+                @for (star of estrelas; track star) {
+                  <span [class]="estadoEstrela(jogo.estrelas, star)">★</span>
+                }
+              </p>
+              <p>Jogo em destaque</p>
+            </div>
+          </article>
+        }
+      </div>
+      <button type="button" class="arrow" (click)="avancarDestaque()" aria-label="Próximo destaque">
+        ›
+      </button>
+    </div>
+  </section>
+
+  <section class="home-carousel ranking-carousel" aria-labelledby="mais-jogados-title">
+    <div class="carousel-heading">
+      <div>
+        <p class="carousel-eyebrow">Popularidade</p>
+        <h2 id="mais-jogados-title">Mais jogados da semana</h2>
+      </div>
+      <span class="carousel-note">Dados de exemplo; sem métricas globais reais</span>
+    </div>
+    <div class="carousel" aria-label="Jogos mais jogados da semana">
+      <button type="button" class="arrow" (click)="voltarMaisJogados()" aria-label="Jogo anterior">
+        ‹
+      </button>
+      <div class="cards">
+        @for (jogo of visiveisMaisJogados(); track jogo.id) {
+          <article class="game-card center" (click)="abrirDetalhes(jogo)">
+            <img [src]="jogo.imagem" [alt]="jogo.nome" />
+            <div>
+              <h3>{{ jogo.nome }}</h3>
+              <p>{{ formatarNumero(jogo.metric) }} sessões nesta semana</p>
+            </div>
+          </article>
+        }
+      </div>
+      <button type="button" class="arrow" (click)="avancarMaisJogados()" aria-label="Próximo jogo">
+        ›
+      </button>
+    </div>
+  </section>
+
+  <section class="home-carousel ranking-carousel" aria-labelledby="mais-avaliados-title">
+    <div class="carousel-heading">
+      <div>
+        <p class="carousel-eyebrow">Opinião da comunidade</p>
+        <h2 id="mais-avaliados-title">Jogos mais avaliados</h2>
+      </div>
+      <span class="carousel-note">Dados de exemplo; sem métricas globais reais</span>
+    </div>
+    <div class="carousel" aria-label="Jogos mais avaliados">
+      <button
+        type="button"
+        class="arrow"
+        (click)="voltarMaisAvaliados()"
+        aria-label="Jogo anterior"
+      >
+        ‹
+      </button>
+      <div class="cards">
+        @for (jogo of visiveisMaisAvaliados(); track jogo.id) {
+          <article class="game-card center" (click)="abrirDetalhes(jogo)">
+            <img [src]="jogo.imagem" [alt]="jogo.nome" />
+            <div>
+              <h3>{{ jogo.nome }}</h3>
+              <p class="stars" [attr.aria-label]="jogo.estrelas + ' estrelas'">
+                @for (star of estrelas; track star) {
+                  <span [class]="estadoEstrela(jogo.estrelas, star)">★</span>
+                }
+              </p>
+              <p>{{ formatarNumero(jogo.metric) }} avaliações</p>
+            </div>
+          </article>
+        }
+      </div>
+      <button
+        type="button"
+        class="arrow"
+        (click)="avancarMaisAvaliados()"
+        aria-label="Próximo jogo"
+      >
+        ›
+      </button>
+    </div>
+  </section>
+
+  @if (catalogoAberto()) {
+    <div class="backdrop" (click)="catalogoAberto.set(false)" aria-hidden="true"></div>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
+      <button class="close" type="button" (click)="catalogoAberto.set(false)" aria-label="Fechar">
+        ×
+      </button>
+      <p class="eyebrow-dialog">Área administrativa</p>
+      <h2 id="catalog-title">
+        {{ catalogoEditando() ? 'Editar jogo do catálogo' : 'Adicionar ao catálogo' }}
+      </h2>
+      <form [formGroup]="formCatalogo" (ngSubmit)="salvarCatalogo()">
+        <label>
+          Nome do jogo
+          <input formControlName="nome" placeholder="Ex.: Hollow Knight" />
+        </label>
+        <label>
+          Descrição do jogo
+          <textarea
+            formControlName="descricao"
+            rows="4"
+            placeholder="Digite uma breve descrição do jogo..."
+          ></textarea>
+        </label>
+
+        <div class="campo-capa">
+          <label
+            >Capa do jogo<input
+              type="file"
+              accept="image/*"
+              (change)="selecionarArquivoCatalogo($event)" /></label
+          ><label
+            >ou use uma URL<input type="url" formControlName="imagem" placeholder="https://..."
+          /></label>
+        </div>
+        @if (formCatalogo.controls.imagem.value) {
+          <img
+            class="capa-preview"
+            [src]="formCatalogo.controls.imagem.value"
+            alt="Prévia da capa"
+          />
+        }
+        <div class="dialog-actions">
+          <button type="button" class="ghost" (click)="catalogoAberto.set(false)">Cancelar</button
+          ><button type="submit" class="primary">
+            {{ catalogoEditando() ? 'Salvar alterações' : 'Publicar no catálogo' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+  @if (detalhes(); as jogo) {
+    <div class="backdrop" (click)="fecharDetalhes()" aria-hidden="true"></div>
+    <section class="dialog details" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <button class="close" type="button" (click)="fecharDetalhes()" aria-label="Fechar">×</button>
+      <img class="details-cover" [src]="jogo.imagem" [alt]="'Capa de ' + jogo.nome" />
+      <div class="details-content">
+        <p class="details-kicker">Detalhes do jogo</p>
+        <h2 id="detail-title">{{ jogo.nome }}</h2>
+        @if (carregandoDetalhesApi()) {
+          <p class="details-api-status" aria-live="polite">Buscando informações atualizadas...</p>
+        } @else if (erroDetalhesApi()) {
+          <p class="details-api-status details-api-error" role="status">{{ erroDetalhesApi() }}</p>
+        } @else if (!detalhesApi()) {
+          <p class="details-api-status" aria-live="polite">
+            Este título não foi encontrado no catálogo FreeToGame; exibindo os dados salvos.
+          </p>
+        } @else {
+          <p class="details-api-status">Informações atualizadas via FreeToGame</p>
+        }
+        <p class="details-description">
+          {{
+            detalhesApi()?.short_description ||
+              jogo.descricao ||
+              'Uma aventura esperando para ser descoberta.'
+          }}
+        </p>
+        <dl class="details-meta">
+          <div>
+            <dt>Desenvolvedor</dt>
+            <dd>{{ detalhesApi()?.developer || jogo.desenvolvedor || 'Não informado' }}</dd>
+          </div>
+          <div>
+            <dt>Distribuidora</dt>
+            <dd>{{ detalhesApi()?.publisher || 'Não informado' }}</dd>
+          </div>
+          <div>
+            <dt>Lançamento</dt>
+            <dd>{{ detalhesApi()?.release_date || jogo.dataLancamento || 'Não informado' }}</dd>
+          </div>
+          <div>
+            <dt>Plataforma</dt>
+            <dd>{{ detalhesApi()?.platform || jogo.plataforma || 'Não informada' }}</dd>
+          </div>
+          <div>
+            <dt>Gênero</dt>
+            <dd>
+              {{ detalhesApi()?.genre || jogo.generos?.join(', ') || 'Não informado' }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+      <div class="dialog-actions">
+        <a class="primary" [routerLink]="['/jogo', slugDoJogo(jogo.nome)]">Ver comentários e avaliar</a>
+        <button type="button" class="primary" (click)="fecharDetalhes()">Fechar</button>
+      </div>
+    </section>
+  }
+</main>

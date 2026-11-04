@@ -1,0 +1,101 @@
+<header
+  class="header"
+  (document:click)="fecharMenuPerfil()"
+  (document:keydown.escape)="fecharMenuPerfil()"
+>
+  <a class="logo" routerLink="/" aria-label="Gamodan — página inicial">
+    <img src="assets/icons/logo-gamodan.png" alt="Gamodan" class="logo-icon" />
+  </a>
+
+  <nav class="menu" aria-label="Navegação principal">
+    <a
+      class="menu-link"
+      routerLink="/"
+      routerLinkActive="ativo"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 10.5 12 3l9 7.5M5.5 9v11h13V9M9.5 20v-7h5v7" />
+      </svg>
+      <span>Início</span>
+    </a>
+    <a class="menu-link" routerLink="/comunidade" routerLinkActive="ativo">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5a7.5 7.5 0 0 1 15 0Z" />
+        <path d="M8 11h.01M12 11h.01M16 11h.01" />
+      </svg>
+      <span>Comunidade</span>
+    </a>
+    <a
+      class="menu-link"
+      routerLink="/lista"
+      [queryParams]="{ filtro: 'todos' }"
+      routerLinkActive="ativo"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />
+      </svg>
+      <span>Minha Lista</span>
+    </a>
+  </nav>
+
+  <div class="header-tools">
+    <form class="search-form" [class.aberto]="buscaAberta()" (ngSubmit)="buscar()">
+      @if (buscaAberta()) {
+        <input
+          class="search-input"
+          type="search"
+          placeholder="Buscar jogos..."
+          aria-label="Buscar jogos na minha lista"
+          [value]="termoBusca()"
+          (input)="termoBusca.set($any($event.target).value)"
+        />
+      }
+      <button
+        type="button"
+        class="icon-button search-toggle"
+        [attr.aria-label]="buscaAberta() ? 'Fechar busca' : 'Buscar jogos'"
+        [attr.aria-expanded]="buscaAberta()"
+        (click)="alternarBusca()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.8" />
+          <path d="m16 16 5 5" />
+        </svg>
+      </button>
+    </form>
+
+    @if (auth.autenticado()) {
+      <div class="profile-menu" (click)="$event.stopPropagation()">
+        <button
+          type="button"
+          class="profile-toggle"
+          [attr.aria-label]="'Abrir menu de ' + (auth.usuario()?.nome || 'perfil')"
+          [attr.aria-expanded]="menuPerfilAberto()"
+          aria-haspopup="true"
+          (click)="alternarMenuPerfil()"
+        >
+          @if (auth.usuario()?.foto; as foto) {
+            <img class="avatar-mini" [src]="foto" alt="" />
+          } @else {
+            <span class="avatar-inicial" aria-hidden="true">
+              {{ auth.usuario()?.nome?.charAt(0)?.toUpperCase() }}
+            </span>
+          }
+          <svg class="profile-chevron" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="m4 6 4 4 4-4" />
+          </svg>
+        </button>
+        @if (menuPerfilAberto()) {
+          <nav class="profile-dropdown" aria-label="Opções do perfil">
+            <a routerLink="/perfil" (click)="fecharMenuPerfil()">Perfil</a>
+            <button type="button" (click)="sair()">Sair da conta</button>
+          </nav>
+        }
+      </div>
+    } @else {
+      <button type="button" class="menu-acao" (click)="abrirAutenticacao('entrar')">Entrar</button>
+    }
+  </div>
+</header>

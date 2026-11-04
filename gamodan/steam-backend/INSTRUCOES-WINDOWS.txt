@@ -1,0 +1,17 @@
+GAMODAN - BACKEND E LOGIN STEAM
+
+1. Abra o terminal nesta pasta e execute: npm install
+2. Copie .env.example para .env e preencha STEAM_API_KEY.
+3. No painel da Steam (https://steamcommunity.com/dev/apikey), registre como domínio o host usado pelo seu backend.
+4. Para desenvolvimento local, mantenha exatamente:
+   STEAM_RETURN_URL=http://localhost:3000/auth/steam/return
+   STEAM_REALM=http://localhost:3000/
+   FRONTEND_URL=http://localhost:4200
+5. Inicie o MongoDB.
+6. Execute npm start.
+7. Em outro terminal, na pasta gamodan, execute npm install e npm start.
+
+IMPORTANTE: abra o site usando http://localhost:4200 (não misture localhost com 127.0.0.1).
+A biblioteca da Steam só pode ser consultada se os detalhes de jogos do perfil estiverem públicos.
+Em produção, use HTTPS e configure STEAM_RETURN_URL, STEAM_REALM e FRONTEND_URL com os domínios reais.
+Nunca publique o arquivo .env ou sua chave privada da Steam.

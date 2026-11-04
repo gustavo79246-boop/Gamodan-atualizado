@@ -1,0 +1,124 @@
+.contato-page {
+    min-height: 100dvh;
+    padding: 3rem 2rem;
+    background: radial-gradient(circle at 10% 0, #f59e0b29, transparent 30%), linear-gradient(135deg, #0b1220, #151b31);
+    color: #fff
+}
+
+.contato-page>header,
+.search,
+.members {
+    width: min(100%, 920px);
+    margin-inline: auto
+}
+
+.contato-page header {
+    text-align: center
+}
+
+.eyebrow {
+    margin: 0;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .75rem;
+    font-weight: 800
+}
+
+.contato-page h1 {
+    margin: .4rem 0
+}
+
+.contato-page header>p:last-child {
+    color: #cbd5e1
+}
+
+.search {
+    display: flex;
+    gap: .75rem;
+    margin-top: 2rem
+}
+
+.search input {
+    min-width: 0;
+    flex: 1;
+    border: 1px solid #ffffff25;
+    border-radius: 999px;
+    background: #ffffff0d;
+    color: #fff;
+    padding: .8rem 1.1rem;
+    font: inherit
+}
+
+.search button {
+    border: 0;
+    border-radius: 999px;
+    padding: .8rem 1.2rem;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    font: inherit;
+    font-weight: 800
+}
+
+.members {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem
+}
+
+.members article {
+    display: grid;
+    gap: .7rem;
+    padding: 1rem;
+    border: 1px solid #ffffff1d;
+    border-radius: 14px;
+    background: #ffffff0b
+}
+
+.members a {
+    color: #cbd5e1;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+    font-size: .9rem;
+    transition: color .15s
+}
+
+.members a:hover {
+    color: #f59e0b
+}
+
+.links {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: wrap
+}
+
+.separador {
+    color: #ffffff59
+}
+
+.members p {
+    grid-column: 1/-1;
+    text-align: center;
+    color: #cbd5e1
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0)
+}
+
+@media(max-width:600px) {
+    .contato-page {
+        padding: 2rem 1rem
+    }
+
+    .search {
+        flex-direction: column
+    }
+}

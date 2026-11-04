@@ -1,0 +1,152 @@
+<main class="perfil">
+  <section class="card">
+    @if (auth.usuario(); as usuario) {
+      <div class="avatar-area">
+        @if (usuario.foto) {
+          <img class="avatar" [src]="usuario.foto" [alt]="'Foto de ' + usuario.nome" />
+        } @else {
+          <div class="avatar avatar-inicial">{{ usuario.nome.charAt(0).toUpperCase() }}</div>
+        }
+        <div class="avatar-info">
+          <label class="trocar-foto"
+            >Trocar foto<input type="file" accept="image/*" (change)="selecionarFoto($event)"
+          /></label>
+        </div>
+        @if (auth.admin()) {
+          <span class="badge-admin"
+            ><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"
+                fill="currentColor"
+              /></svg
+            >Administrador(a)
+          </span>
+        }
+      </div>
+      <p class="eyebrow">Perfil</p>
+      <h1>Bem-vindo(a), {{ usuario.nome }}</h1>
+      <p>Seu acesso está ativo. Jogos desta conta serão lembrados no seu próximo acesso.</p>
+      <div class="data">
+        <div>
+          <span>Nome</span><strong>{{ usuario.nome }}</strong>
+        </div>
+        <div>
+          <span>E-mail</span><strong>{{ usuario.email }}</strong>
+        </div>
+      </div>
+      <section class="estatisticas" aria-labelledby="estatisticas-title">
+        <p class="eyebrow">Sua jornada</p>
+        <h2 id="estatisticas-title">Estatísticas de jogos</h2>
+        <div class="grade-estatisticas">
+          <article class="estatistica">
+            <strong>{{ totalJogos() }}</strong>
+            <span>Jogos na lista</span>
+          </article>
+          <article class="estatistica">
+            <strong>{{ totalJogosJogados() }}</strong>
+            <span>Jogos iniciados</span>
+          </article>
+          <article class="estatistica">
+            <strong>{{ totalJogosFinalizados() }}</strong>
+            <span>Jogos finalizados</span>
+          </article>
+          <article class="estatistica">
+            <strong>{{ totalHorasJogadas() }} h</strong>
+            <span>Horas jogadas</span>
+          </article>
+          <article class="estatistica">
+            <strong>{{ mediaEstrelas() }} ★</strong>
+            <span>Média de avaliações</span>
+          </article>
+        </div>
+
+        <h3 class="subtitulo-secao">Horas por jogo</h3>
+        @if (jogos().length) {
+          <ul class="horas-por-jogo">
+            @for (jogo of jogos(); track jogo.id) {
+              <li>
+                <span>{{ jogo.nome }}</span
+                ><strong>{{ jogo.horasJogadas ?? 0 }} h</strong>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="sem-jogos">
+            Adicione jogos à sua lista para acompanhar suas horas e estatísticas.
+          </p>
+        }
+      </section>
+
+      <section class="biblioteca-steam" aria-labelledby="biblioteca-steam-title">
+        <p class="eyebrow">Conta conectada</p>
+        <h2 id="biblioteca-steam-title">Biblioteca da Steam</h2>
+        @if (usuario.steamLinked) {
+          <p class="steam-status">Steam vinculada · ID {{ usuario.steamId }}</p>
+          <button type="button" class="btn-salvar" (click)="carregarJogosSteam()" [disabled]="steam.carregando()">
+            {{ steam.carregando() ? 'Carregando biblioteca...' : 'Atualizar jogos da Steam' }}
+          </button>
+          @if (steam.erro()) { <p class="steam-erro" role="alert">{{ steam.erro() }}</p> }
+          @if (steam.carregado() && !steam.erro()) {
+            <p class="steam-resumo">{{ steam.jogos().length }} jogos encontrados na sua biblioteca.</p>
+            @if (steam.jogos().length) {
+              <div class="steam-grid">
+                @for (jogo of steam.jogos(); track jogo.appId) {
+                  <article class="steam-jogo">
+                    <img [src]="jogo.imagem" [alt]="'Capa de ' + jogo.nome" loading="lazy" />
+                    <div><strong>{{ jogo.nome }}</strong><span>{{ jogo.horas }} h jogadas</span></div>
+                  </article>
+                }
+              </div>
+            } @else {
+              <p class="sem-jogos">A Steam não retornou jogos para esta conta. Confira se os detalhes dos jogos estão públicos.</p>
+            }
+          }
+        } @else {
+          <p class="sem-jogos">Sua conta ainda não está vinculada à Steam. Entre pelo botão “Entrar com Steam” para conectar sua biblioteca.</p>
+          <button class="btn-salvar steam-link" type="button" (click)="auth.entrarComSteam()">Vincular / entrar com Steam</button>
+        }
+      </section>
+
+      <section class="preferencias" aria-labelledby="preferencias-title">
+        <p class="eyebrow">Do seu jeito</p>
+        <h2 id="preferencias-title">Suas preferências</h2>
+        <label>
+          Jogo favorito
+          <select
+            [value]="jogoFavoritoId()"
+            (change)="jogoFavoritoId.set($any($event.target).value); preferenciasSalvas.set(false)"
+          >
+            <option value="">Escolha um jogo</option>
+            @for (jogo of jogos(); track jogo.id) {
+              <option [value]="jogo.id">{{ jogo.nome }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Gênero de jogo favorito
+          <input
+            type="text"
+            maxlength="40"
+            placeholder="Ex.: RPG, aventura, plataforma..."
+            [value]="generoFavorito()"
+            (input)="generoFavorito.set($any($event.target).value); preferenciasSalvas.set(false)"
+          />
+        </label>
+        <button type="button" class="btn-salvar" (click)="salvarPreferencias()">
+          Salvar preferências
+        </button>
+        @if (preferenciasSalvas()) {
+          <p class="confirmacao" role="status">Preferências salvas com sucesso.</p>
+        }
+        @if (nomeJogoFavorito()) {
+          <p class="jogo-favorito-atual">
+            Seu favorito: <strong>{{ nomeJogoFavorito() }}</strong>
+          </p>
+        }
+      </section>
+      <div class="acoes-perfil">
+        <button type="button" class="btn-sair" (click)="sair()">Sair da conta</button>
+      </div>
+    }
+  </section>
+</main>

@@ -1,0 +1,93 @@
+<main class="community-profile">
+  @if (profile(); as usuario) {
+    <a class="voltar-home" routerLink="/">← Voltar à página inicial</a>
+    <section class="profile-card" aria-labelledby="profile-name">
+      <div class="profile-heading">
+        <div class="profile-avatar" aria-hidden="true">{{ usuario.initials }}</div>
+        <div>
+          <p class="profile-eyebrow">Perfil público de demonstração</p>
+          <h1 id="profile-name">{{ usuario.username }}</h1>
+          <p class="profile-disclaimer">
+            Usuário fictício. Esta lista e estas avaliações são exemplos de demonstração.
+          </p>
+        </div>
+      </div>
+
+      <section class="profile-stats" aria-label="Estatísticas públicas">
+        <article>
+          <strong>{{ totalJogos() }}</strong
+          ><span>Jogos na lista</span>
+        </article>
+        <article>
+          <strong>{{ totalJogosIniciados() }}</strong
+          ><span>Jogos iniciados</span>
+        </article>
+        <article>
+          <strong>{{ totalFinalizados() }}</strong
+          ><span>Jogos finalizados</span>
+        </article>
+        <article>
+          <strong>{{ totalHoras() }} h</strong><span>Horas jogadas</span>
+        </article>
+        <article>
+          <strong>{{ mediaEstrelas() }} ★</strong><span>Média de avaliações</span>
+        </article>
+      </section>
+
+      <section class="profile-preferences" aria-label="Preferências públicas">
+        <div>
+          <span>Jogo favorito</span>
+          <strong>{{ usuario.favoriteGame }}</strong>
+        </div>
+        <div>
+          <span>Gênero favorito</span>
+          <strong>{{ usuario.favoriteGenre }}</strong>
+        </div>
+      </section>
+    </section>
+
+    <section class="public-games" aria-labelledby="games-heading">
+      <div class="games-heading">
+        <div>
+          <p class="profile-eyebrow">Coleção pública</p>
+          <h2 id="games-heading">Jogos e avaliações de {{ usuario.username }}</h2>
+        </div>
+        <span>{{ totalJogos() }} jogos</span>
+      </div>
+
+      <div class="public-game-list">
+        @for (review of usuario.reviews; track review.game.id) {
+          <article class="public-game">
+            <img [src]="review.game.imagem" [alt]="'Capa de ' + review.game.nome" />
+            <div class="public-game-info">
+              <div class="public-game-title">
+                <div>
+                  <h3>{{ review.game.nome }}</h3>
+                  <p>
+                    {{ review.game.generos?.join(' · ') }} ·
+                    {{ review.game.status === 'finalizado' ? 'Finalizado' : 'Jogando' }}
+                  </p>
+                </div>
+                <span
+                  class="public-rating"
+                  [attr.aria-label]="review.game.estrelas + ' de 5 estrelas'"
+                >
+                  {{ review.game.estrelas }} ★
+                </span>
+              </div>
+              <p class="public-feedback">“{{ review.feedback }}”</p>
+              <p class="public-hours">{{ review.game.horasJogadas ?? 0 }} horas jogadas</p>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="profile-card profile-not-found">
+      <p class="profile-eyebrow">Perfil não encontrado</p>
+      <h1>Este perfil público não existe.</h1>
+      <p>Confira o nome de usuário ou volte à página inicial para ver os perfis de demonstração.</p>
+      <a class="back-button" routerLink="/">Voltar à página inicial</a>
+    </section>
+  }
+</main>

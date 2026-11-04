@@ -1,0 +1,138 @@
+<main class="game-discussion">
+  @if (game(); as jogo) {
+    <a class="back-link" routerLink="/">← Voltar à página inicial</a>
+
+    <section class="game-banner" [style.--game-banner]="'url(' + jogo.imagem + ')'">
+      <div class="banner-content">
+        <p class="banner-eyebrow">Comunidade Gamodan</p>
+        <h1>{{ jogo.nome }}</h1>
+        <p class="banner-description">
+          {{ jogo.descricao || 'Veja o que a comunidade está dizendo sobre este jogo.' }}
+        </p>
+        <div class="banner-meta">
+          @if (jogo.desenvolvedor) {
+            <span>{{ jogo.desenvolvedor }}</span>
+          }
+          @if (jogo.dataLancamento) {
+            <span>{{ jogo.dataLancamento }}</span>
+          }
+          @if (jogo.plataforma) {
+            <span>{{ jogo.plataforma }}</span>
+          }
+          @if (jogo.generos?.length) {
+            <span>{{ jogo.generos?.join(' · ') }}</span>
+          }
+        </div>
+        <p class="community-rating">
+          <strong>{{ averageRating() }} ★</strong>
+          {{ comments().length }} avaliações e comentários
+        </p>
+      </div>
+    </section>
+
+    <section class="discussion-layout" aria-label="Comentários e avaliação">
+      <div class="reviews-column">
+        <header class="section-heading">
+          <div>
+            <p class="section-eyebrow">Opiniões dos jogadores</p>
+            <h2>Comentários da comunidade</h2>
+          </div>
+          <span>{{ comments().length }}</span>
+        </header>
+
+        <div class="review-list">
+          @for (comment of comments(); track comment.id) {
+            <article class="review-card">
+              @if (comment.avatar) {
+                <img
+                  class="review-avatar"
+                  [src]="comment.avatar"
+                  [alt]="'Foto de ' + comment.username"
+                />
+              } @else {
+                <span class="review-avatar review-initial" aria-hidden="true">
+                  {{ comment.username.charAt(0).toUpperCase() }}
+                </span>
+              }
+              <div class="review-body">
+                <div class="review-heading">
+                  <div>
+                    <h3>{{ comment.username }}</h3>
+                    @if (comment.fictitious) {
+                      <span class="demo-label">Perfil fictício</span>
+                    }
+                  </div>
+                  <span class="review-rating" [attr.aria-label]="comment.rating + ' de 5 estrelas'">
+                    @for (star of stars; track star) {
+                      <span [class.star-active]="comment.rating >= star">★</span>
+                    }
+                  </span>
+                </div>
+                <p class="review-feedback">{{ comment.feedback }}</p>
+              </div>
+            </article>
+          } @empty {
+            <p class="empty-reviews">Ainda não há comentários. Seja a primeira pessoa a avaliar!</p>
+          }
+        </div>
+      </div>
+
+      <aside class="write-review">
+        <p class="section-eyebrow">Sua opinião</p>
+        <h2>{{ userComment() ? 'Atualize sua avaliação' : 'Deixe seu feedback' }}</h2>
+        @if (auth.autenticado()) {
+          <p class="review-hint">
+            Você pode comentar se quiser. Sua avaliação será exibida junto às opiniões da
+            comunidade.
+          </p>
+          <fieldset class="rating-picker">
+            <legend>Sua nota</legend>
+            <div>
+              @for (star of stars; track star) {
+                <button
+                  type="button"
+                  [class.star-active]="rating() >= star"
+                  [attr.aria-label]="'Avaliar com ' + star + ' estrelas'"
+                  [attr.aria-pressed]="rating() === star"
+                  (click)="avaliar(star)"
+                >
+                  ★
+                </button>
+              }
+            </div>
+          </fieldset>
+          <label class="feedback-field">
+            Comentário
+            <textarea
+              rows="5"
+              maxlength="500"
+              placeholder="O que achou do jogo?"
+              [value]="feedback()"
+              (input)="feedback.set($any($event.target).value)"
+            ></textarea>
+            <span>{{ feedback().length }}/500</span>
+          </label>
+          <button type="button" class="submit-review" (click)="enviarComentario()">
+            {{ userComment() ? 'Atualizar avaliação' : 'Publicar avaliação' }}
+          </button>
+          @if (message()) {
+            <p class="form-message" role="status">{{ message() }}</p>
+          }
+        } @else {
+          <p class="review-hint">
+            Entre na sua conta para avaliar o jogo ou compartilhar um comentário.
+          </p>
+          <button type="button" class="submit-review" (click)="auth.abrirModal('entrar')">
+            Entrar para comentar
+          </button>
+        }
+      </aside>
+    </section>
+  } @else {
+    <section class="game-not-found">
+      <p class="section-eyebrow">Jogo não encontrado</p>
+      <h1>Não encontramos esta página de comentários.</h1>
+      <a class="back-link" routerLink="/">Voltar à página inicial</a>
+    </section>
+  }
+</main>

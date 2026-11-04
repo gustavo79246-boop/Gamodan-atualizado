@@ -1,0 +1,93 @@
+<main class="community-page">
+  <header class="community-heading">
+    <div>
+      <p class="community-eyebrow">Comunidade Gamodan</p>
+      <h1>O que está acontecendo no mundo dos games?</h1>
+      <p class="community-intro">Converse, compartilhe suas partidas, siga jogadores e descubra novas experiências.</p>
+    </div>
+    <div class="community-heading-mark" aria-hidden="true">G</div>
+  </header>
+
+  <div class="community-layout">
+    <section class="community-main">
+      <section class="community-composer" aria-label="Criar publicação">
+        @if (auth.usuario(); as usuario) {
+          <div class="composer-user">
+            @if (usuario.foto) { <img [src]="usuario.foto" [alt]="'Foto de ' + usuario.nome"> }
+            @else { <span class="composer-avatar">{{ usuario.nome.charAt(0).toUpperCase() }}</span> }
+            <strong>{{ usuario.nome }}</strong>
+          </div>
+          <textarea [ngModel]="texto()" (ngModelChange)="texto.set($event)" maxlength="1000" rows="4" placeholder="O que está acontecendo na sua gameplay?"></textarea>
+          <div class="composer-actions">
+            <input [ngModel]="jogo()" (ngModelChange)="jogo.set($event)" maxlength="80" placeholder="Adicionar jogo (opcional)" aria-label="Jogo relacionado">
+            <span>{{ texto().length }}/1000</span>
+            <button type="button" (click)="publicar()" [disabled]="enviando() || !texto().trim()">{{ enviando() ? 'Publicando...' : 'Publicar' }}</button>
+          </div>
+        } @else {
+          <div class="composer-guest"><p>Entre na sua conta para compartilhar suas experiências com outros jogadores.</p><button type="button" (click)="auth.abrirModal('entrar')">Entrar para publicar</button></div>
+        }
+      </section>
+
+      <nav class="feed-tabs" aria-label="Tipo de feed">
+        <button type="button" [class.active]="feed() === 'todos'" (click)="mudarFeed('todos')">Para você</button>
+        <button type="button" [class.active]="feed() === 'seguindo'" (click)="mudarFeed('seguindo')">Seguindo</button>
+      </nav>
+
+      @if (erro()) { <p class="community-error" role="alert">{{ erro() }}</p> }
+      <section class="community-feed" aria-label="Publicações">
+        @if (carregando()) { <p class="community-empty">Carregando publicações...</p> }
+        @else if (!posts().length) { <p class="community-empty">{{ feed() === 'seguindo' ? 'Ainda não há publicações de pessoas que você segue.' : 'Ainda não há publicações. Seja a primeira pessoa a movimentar a comunidade!' }}</p> }
+        @for (post of posts(); track post.id) {
+          <article class="community-post">
+            <header class="post-heading">
+              <div class="post-profile">
+                @if (post.avatar) { <img class="post-avatar-img" [src]="post.avatar" [alt]="'Foto de ' + post.username"> }
+                @else { <span class="post-avatar">{{ post.username.charAt(0).toUpperCase() }}</span> }
+                <span class="post-author-block"><strong class="post-username">{{ post.username }}</strong><time>{{ formatarData(post.createdAt) }}</time></span>
+              </div>
+              @if (post.isMine) { <button class="post-delete" type="button" (click)="excluir(post)" aria-label="Excluir publicação">···</button> }
+            </header>
+            @if (post.gameName) { <p class="post-game-tag">🎮 {{ post.gameName }}</p> }
+            <p class="post-feedback">{{ post.text }}</p>
+            <footer class="post-actions">
+              <button type="button" class="post-action" [class.liked]="post.likedByMe" (click)="curtir(post)" [attr.aria-label]="post.likedByMe ? 'Descurtir publicação' : 'Curtir publicação'">
+                <span aria-hidden="true">{{ post.likedByMe ? '♥' : '♡' }}</span> <span>{{ post.likesCount }} Curtidas</span>
+              </button>
+              <button type="button" class="post-action" (click)="post.showComments = !post.showComments">
+                <span aria-hidden="true">▢</span> <span>{{ post.commentsCount }} Comentários</span>
+              </button>
+            </footer>
+            @if (post.showComments) {
+              <section class="post-comments" aria-label="Comentários">
+                @for (comment of post.comments; track comment.id) {
+                  <div class="post-comment"><strong>{{ comment.username }}</strong><p>{{ comment.text }}</p></div>
+                }
+                @if (post.commentsCount > post.comments.length) { <p class="comments-note">Mostrando os comentários mais recentes.</p> }
+                @if (auth.autenticado()) {
+                  <div class="comment-compose"><input [ngModel]="post.commentDraft || ''" (ngModelChange)="post.commentDraft = $event" maxlength="500" placeholder="Escreva um comentário..." (keyup.enter)="comentar(post)"><button type="button" (click)="comentar(post)" [disabled]="!(post.commentDraft || '').trim()">Enviar</button></div>
+                } @else { <button class="comment-login" type="button" (click)="auth.abrirModal('entrar')">Entre para comentar</button> }
+              </section>
+            }
+          </article>
+        }
+      </section>
+    </section>
+
+    <aside class="community-sidebar">
+      <section class="sidebar-card">
+        <h2>Jogadores para seguir</h2>
+        <p class="sidebar-subtitle">Encontre pessoas e acompanhe suas publicações.</p>
+        @if (!people().length) { <p class="sidebar-empty">Novos jogadores aparecerão aqui.</p> }
+        @for (person of people(); track person.id) {
+          <div class="suggested-person">
+            @if (person.avatar) { <img [src]="person.avatar" [alt]="'Foto de ' + person.username"> }
+            @else { <span class="suggested-avatar">{{ person.username.charAt(0).toUpperCase() }}</span> }
+            <div class="suggested-info"><strong>{{ person.username }}</strong><small>{{ person.followersCount }} seguidores</small></div>
+            <button type="button" [class.following]="person.isFollowing" (click)="seguir(person)">{{ person.isFollowing ? 'Seguindo' : 'Seguir' }}</button>
+          </div>
+        }
+      </section>
+      <section class="sidebar-note"><strong>Seu espaço gamer.</strong><p>Compartilhe conquistas, peça dicas, recomende jogos e conheça quem joga como você.</p></section>
+    </aside>
+  </div>
+</main>
