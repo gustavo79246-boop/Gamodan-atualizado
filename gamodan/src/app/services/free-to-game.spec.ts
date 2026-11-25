@@ -1,108 +1,62 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { FreeToGameService, FreeToGame } from './free-to-game';
+import { API_URL } from '../config/api.config';
+import { FreeToGame, FreeToGameService } from './free-to-game';
 
 describe('FreeToGameService', () => {
   let service: FreeToGameService;
   let httpMock: HttpTestingController;
+  const base = `${API_URL}/free-games`;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [FreeToGameService],
-    });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(FreeToGameService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => {
-    httpMock.verify();
-  });
+  afterEach(() => httpMock.verify());
 
-  it('deve ser criado com sucesso', () => {
-    expect(service).toBeTruthy();
-  });
+  it('busca jogos pela nossa API, enviando o termo e o limite', () => {
+    const jogos = [{ id: 1, title: 'Shooter Game' } as FreeToGame];
+    service.buscarJogos(' Shooter ', 5).subscribe((resultado) => expect(resultado).toEqual(jogos));
 
-  it('deve buscar jogos pelo nome com o parâmetro title', () => {
-    const mockGames: FreeToGame[] = [{ id: 1, title: 'Shooter Game' } as FreeToGame];
-    const nomeJogo = 'Shooter';
-
-    service.buscarJogos(nomeJogo).subscribe((games) => {
-      expect(games).toEqual(mockGames);
-    });
-
-    const req = httpMock.expectOne((request) => {
-      return (
-        request.url === 'https://www.freetogame.com/api/games' &&
-        request.params.get('title') === nomeJogo
-      );
-    });
-
+    const req = httpMock.expectOne((r) => r.url === base);
     expect(req.request.method).toBe('GET');
-    req.flush(mockGames);
+    expect(req.request.params.get('q')).toBe('Shooter');
+    expect(req.request.params.get('limit')).toBe('5');
+    req.flush({ games: jogos });
   });
 
-  it('deve buscar todos os jogos', () => {
-    const mockGames: FreeToGame[] = [{ id: 1, title: 'All Games' } as FreeToGame];
-
-    service.buscarTodos().subscribe((games) => {
-      expect(games).toEqual(mockGames);
-    });
-
-    const req = httpMock.expectOne('https://www.freetogame.com/api/games');
-    expect(req.request.method).toBe('GET');
-    req.flush(mockGames);
+  it('não chama a API quando o termo está vazio', () => {
+    service.buscarJogos('   ').subscribe((resultado) => expect(resultado).toEqual([]));
+    httpMock.expectNone(base);
   });
 
-  it('deve buscar jogo específico por ID', () => {
-    const mockGame: FreeToGame = { id: 123, title: 'Specific Game' } as FreeToGame;
-
-    service.buscarPorId(123).subscribe((game) => {
-      expect(game).toEqual(mockGame);
-    });
-
-    const req = httpMock.expectOne('https://www.freetogame.com/api/game?id=123');
-    expect(req.request.method).toBe('GET');
-    req.flush(mockGame);
+  it('busca um jogo por id', () => {
+    const jogo = { id: 123, title: 'Specific Game' } as FreeToGame;
+    service.buscarPorId(123).subscribe((resultado) => expect(resultado).toEqual(jogo));
+    httpMock.expectOne(`${base}/123`).flush({ game: jogo });
   });
 
-  it('deve buscar detalhes por título e consultar o resultado correspondente por ID', () => {
-    const resultadoBusca: FreeToGame = {
-      id: 123,
-      title: 'Specific Game',
-    } as FreeToGame;
-    const detalhes: FreeToGame = {
-      ...resultadoBusca,
-      short_description: 'Game description',
-    };
+  it('busca os detalhes pelo título exato em uma única chamada', () => {
+    const jogo = { id: 123, title: 'Specific Game', short_description: 'Descrição' } as FreeToGame;
+    service.buscarDetalhesPorTitulo(' Specific Game ').subscribe((resultado) => expect(resultado).toEqual(jogo));
 
-    service.buscarDetalhesPorTitulo(' specific game ').subscribe((jogo) => {
-      expect(jogo).toEqual(detalhes);
-    });
-
-    const busca = httpMock.expectOne(
-      (request) =>
-        request.url === 'https://www.freetogame.com/api/games' &&
-        request.params.get('title') === ' specific game ',
-    );
-    busca.flush([resultadoBusca]);
-
-    const detalhe = httpMock.expectOne('https://www.freetogame.com/api/game?id=123');
-    detalhe.flush(detalhes);
+    const req = httpMock.expectOne((r) => r.url === `${base}/by-title`);
+    expect(req.request.params.get('title')).toBe('Specific Game');
+    req.flush({ game: jogo });
   });
 
-  it('deve retornar null quando o título não existe na API', () => {
-    service.buscarDetalhesPorTitulo('Minecraft').subscribe((jogo) => {
-      expect(jogo).toBeNull();
-    });
+  it('retorna null quando o título não existe', () => {
+    service.buscarDetalhesPorTitulo('Minecraft').subscribe((resultado) => expect(resultado).toBeNull());
+    httpMock.expectOne((r) => r.url === `${base}/by-title`).flush({ game: null });
+  });
 
-    const busca = httpMock.expectOne(
-      (request) =>
-        request.url === 'https://www.freetogame.com/api/games' &&
-        request.params.get('title') === 'Minecraft',
-    );
-    busca.flush([{ id: 1, title: 'Minecraft Dungeons' }]);
+  it('retorna null sem chamar a API quando o título está vazio', () => {
+    service.buscarDetalhesPorTitulo('  ').subscribe((resultado) => expect(resultado).toBeNull());
+    httpMock.expectNone(`${base}/by-title`);
   });
 });

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { API_BASE_URL, API_URL } from './api.config';
+import { API_URL, STEAM_LOGIN_URL } from '../config/api.config';
 
 export type AuthMode = 'entrar' | 'criar';
 export interface AuthUser {
@@ -60,8 +60,8 @@ export class AuthService {
   }
 
   entrarComSteam(): void {
-    // Redireciona ao backend no mesmo hostname usado pelo navegador.
-    window.location.assign(`${API_BASE_URL}/auth/steam`);
+    // Use exatamente o mesmo host (localhost) no Angular e no backend para o cookie de sessão.
+    window.location.assign(STEAM_LOGIN_URL);
   }
 
   abrirModal(modo: AuthMode = 'entrar'): void { this.modeState.set(modo); this.modalState.set(true); }

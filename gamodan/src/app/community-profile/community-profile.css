@@ -22,9 +22,8 @@
   padding: clamp(1.1rem, 3vw, 2rem);
   border: 1px solid #ffffff20;
   border-radius: 18px;
-  background: #111b31d9;
-  box-shadow: 0 16px 48px #0003;
-}
+  
+  box-shadow: 0 16px 48px #0003;background:var(--glass-fill);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-color:var(--glass-border);box-shadow:var(--glass-shine),var(--glass-shadow);}
 
 .profile-heading {
   display: flex;

@@ -111,9 +111,8 @@
   padding: clamp(1rem, 2.5vw, 1.5rem);
   border: 1px solid #ffffff1e;
   border-radius: 16px;
-  background: #111827d9;
-  box-shadow: 0 14px 42px rgb(0 0 0 / 20%);
-}
+  
+  box-shadow: 0 14px 42px rgb(0 0 0 / 20%);background:var(--glass-fill);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-color:var(--glass-border);box-shadow:var(--glass-shine),var(--glass-shadow);}
 
 .section-heading {
   display: flex;

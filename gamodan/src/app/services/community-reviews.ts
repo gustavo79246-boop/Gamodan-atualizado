@@ -5,7 +5,7 @@ import { AuthUser } from './auth';
 import { CommunityProfilesService } from './community-profiles';
 import { Game } from '../models/game.model';
 import { CatalogService } from './catalog';
-import { API_URL } from './api.config';
+import { API_URL } from '../config/api.config';
 
 export interface CommunityGameComment {
   id: string; username: string; avatar?: string; rating: number; feedback: string;

@@ -1,85 +1,527 @@
 <main class="lista-page">
-  <section class="lista-shell">
-    <header class="lista-hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Sua biblioteca, em um só lugar</p>
-        <h1>Minha lista</h1>
-        <p class="subtitulo">Todos os jogos da sua biblioteca Steam, sincronizados automaticamente com o Gamodan.</p>
-      </div>
-      @if (auth.usuario()?.foto; as foto) {
-        <img class="avatar-lista" [src]="foto" [alt]="'Foto de ' + auth.usuario()?.nome" />
-      }
-    </header>
+  <header class="header-lista">
+    <div class="header-texto">
+      <p class="eyebrow">Coleção pessoal</p>
+      <h1>Minha lista de jogos</h1>
+      <p class="subtitulo">
+        {{ totalGeral() }} jogo(s) cadastrado(s) · {{ totalFavoritos() }} favorito(s) ·
+        {{ totalWishlist() }} wishlist
+      </p>
+      <label class="busca-jogos">
+        <span class="sr-only">Buscar na minha lista</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.8" />
+          <path d="m16 16 5 5" />
+        </svg>
+        <input
+          type="search"
+          placeholder="Buscar jogos na lista..."
+          [value]="termoBusca()"
+          (input)="termoBusca.set($any($event.target).value)"
+        />
+      </label>
+    </div>
+    @if (auth.usuario()?.foto; as foto) {
+      <img class="avatar-lista" [src]="foto" [alt]="'Foto de ' + auth.usuario()?.nome" />
+    }
 
+    <div class="acoes-lista">
+      <button type="button" class="primary" (click)="abrirNovoJogo()">Adicionar jogo pago</button>
+      <button type="button" class="secondary" (click)="abrirBuscaGratis()">
+        Adicionar jogo grátis
+      </button>
+    </div>
+
+    <nav class="filtros" aria-label="Filtrar lista de jogos">
+      <button
+        type="button"
+        class="filtro-btn"
+        [class.ativo]="filtro() === 'todos'"
+        (click)="definirFiltro('todos')"
+      >
+        Todos
+      </button>
+      <button
+        type="button"
+        class="filtro-btn"
+        [class.ativo]="filtro() === 'favoritos'"
+        (click)="definirFiltro('favoritos')"
+      >
+        Favoritos
+      </button>
+      <button
+        type="button"
+        class="filtro-btn"
+        [class.ativo]="filtro() === 'wishlist'"
+        (click)="definirFiltro('wishlist')"
+      >
+        Wishlist
+      </button>
+      <label class="filtro-status">
+        <span class="sr-only">Filtrar por status</span>
+        <select
+          [value]="filtroStatusSelecionado()"
+          (change)="definirFiltroStatus($any($event.target).value)"
+        >
+          <option value="">Status</option>
+          <option value="jogando">Jogando</option>
+          <option value="pendente">Pendente</option>
+          <option value="finalizado">Finalizado</option>
+        </select>
+      </label>
+    </nav>
+  </header>
+
+  <section class="steam-owned-list" aria-labelledby="steam-owned-title">
+    <div class="steam-owned-heading">
+      <div>
+        <p class="eyebrow">Sincronizado com sua conta</p>
+        <h2 id="steam-owned-title">Jogos que você possui na Steam</h2>
+        <p>Esta área mostra somente títulos retornados pela biblioteca da sua conta Steam.</p>
+      </div>
+      @if (auth.usuario()?.steamLinked) {
+        <button type="button" class="secondary" (click)="atualizarBibliotecaSteam()" [disabled]="steam.carregando()">
+          {{ steam.carregando() ? 'Atualizando...' : 'Atualizar biblioteca' }}
+        </button>
+      }
+    </div>
     @if (!auth.usuario()?.steamLinked) {
-      <section class="steam-state" aria-live="polite">
-        <div class="steam-mark" aria-hidden="true">S</div>
-        <div class="steam-state-copy">
-          <h2>Conecte sua conta Steam</h2>
-          <p>Entre usando a Steam para importar automaticamente os jogos que você possui. Não será necessário adicionar títulos manualmente.</p>
-        </div>
-        <button class="steam-button" type="button" (click)="auth.entrarComSteam()">Conectar Steam</button>
-      </section>
+      <p class="steam-owned-empty">Conecte sua conta Steam pelo botão “Entrar com Steam” no acesso para consultar seus jogos.</p>
+    } @else if (steam.erro()) {
+      <p class="steam-owned-error" role="alert">{{ steam.erro() }}</p>
+    } @else if (steam.carregando() && !steam.carregado()) {
+      <p class="steam-owned-empty">Carregando sua biblioteca...</p>
+    } @else if (steam.carregado() && steam.jogos().length === 0) {
+      <p class="steam-owned-empty">Nenhum jogo foi retornado. Confira se “Detalhes dos jogos” está Público nas configurações de privacidade da Steam.</p>
     } @else {
-      <section class="library-panel" aria-labelledby="library-title">
-        <div class="library-toolbar">
-          <div class="library-heading">
-            <span class="status-dot"></span>
-            <div>
-              <p class="eyebrow">Biblioteca sincronizada</p>
-              <h2 id="library-title">Seus jogos</h2>
-              <p class="library-count">{{ totalGeral() }} jogo(s) encontrados na Steam</p>
-            </div>
-          </div>
-          <button class="refresh-button" type="button" (click)="atualizarBibliotecaSteam()" [disabled]="steam.carregando()">
-            <span aria-hidden="true">↻</span> {{ steam.carregando() ? 'Atualizando...' : 'Sincronizar' }}
+      <div class="steam-owned-grid">
+        @for (jogo of steam.jogos(); track jogo.appId) {
+          <article class="steam-owned-card">
+            <img [src]="jogo.imagem" [alt]="'Capa de ' + jogo.nome" loading="lazy" />
+            <div><strong>{{ jogo.nome }}</strong><span>{{ jogo.horas }} h jogadas</span></div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="grid">
+    @for (jogo of jogos(); track jogo.id) {
+      <article class="card" (click)="abrirDetalhes(jogo)">
+        <div class="capa-container">
+          <img [src]="jogo.imagem" [alt]="jogo.nome" />
+          <button
+            type="button"
+            class="fav-toggle"
+            [class.ativo]="jogo.favorito"
+            [attr.aria-label]="jogo.favorito ? 'Remover dos favoritos' : 'Favoritar jogo'"
+            (click)="alternarFavorito(jogo.id, $event)"
+          >
+            ★
           </button>
         </div>
 
-        @if (steam.jogos().length > 0) {
-          <label class="busca-jogos">
-            <span aria-hidden="true">⌕</span>
-            <input type="search" placeholder="Buscar um jogo da sua biblioteca..." [value]="buscaSteam()" (input)="buscaSteam.set($any($event.target).value)" />
-            @if (buscaSteam()) {
-              <button type="button" class="clear-search" (click)="buscaSteam.set('')" aria-label="Limpar busca">×</button>
+        <div class="card-corpo">
+          <div class="card-topo">
+            <h2>{{ jogo.nome }}</h2>
+            <span class="badge" [attr.data-status]="jogo.status">{{ jogo.status }}</span>
+          </div>
+
+          <div class="estrelas-preview" [attr.aria-label]="jogo.estrelas + ' estrelas'">
+            @for (star of estrelas; track star) {
+              <span [class]="estadoEstrela(jogo.estrelas, star)">★</span>
             }
-          </label>
+          </div>
+
+          <p class="datas">
+            {{ formatarData(jogo.dataInicial) }}
+            · {{ jogo.dataFinal ? formatarData(jogo.dataFinal) : 'Em andamento' }}
+          </p>
+          <p class="datas">{{ jogo.horasJogadas ?? 0 }} horas jogadas</p>
+
+          <div class="card-acoes" (click)="$event.stopPropagation()">
+            <label class="status-inline">
+              <span class="sr-only">Alterar status</span>
+              <select
+                [value]="jogo.status"
+                (change)="alterarStatus(jogo.id, $any($event.target).value, $event)"
+              >
+                <option value="pendente">Pendente</option>
+                <option value="jogando">Jogando</option>
+                <option value="finalizado">Finalizado</option>
+              </select>
+            </label>
+            <button type="button" class="btn-acao" (click)="iniciarEdicao(jogo, $event)">
+              Editar
+            </button>
+            <button type="button" class="btn-acao perigo" (click)="excluirJogo(jogo.id, $event)">
+              Excluir
+            </button>
+          </div>
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-state">
+        <p class="empty-title">Nenhum jogo encontrado</p>
+        <p class="empty-copy">Não há títulos para o filtro selecionado.</p>
+      </div>
+    }
+  </section>
+
+  @if (novoJogoAberto()) {
+    <div class="backdrop" (click)="fecharNovoJogo()" aria-hidden="true"></div>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="add-game-title">
+      <button class="close" type="button" (click)="fecharNovoJogo()" aria-label="Fechar">×</button>
+      <h2 id="add-game-title">Adicionar jogo à lista</h2>
+      <form [formGroup]="form" (ngSubmit)="salvarNovoJogo()">
+        <label
+          >Nome do jogo
+          <input formControlName="nome" placeholder="Ex.: Hollow Knight" #nomeJogo />
+        </label>
+        @if (buscarSugestoes(nomeJogo.value).length) {
+          <div class="sugestoes-lista" role="listbox" aria-label="Sugestões do catálogo">
+            @for (item of buscarSugestoes(nomeJogo.value); track item.nome) {
+              <button
+                type="button"
+                role="option"
+                (click)="selecionarSugestao(item.nome, item.imagem)"
+              >
+                <img [src]="item.imagem" alt="" />
+                <span>{{ item.nome }}</span>
+              </button>
+            }
+          </div>
         }
 
-        @if (steam.erro()) {
-          <div class="state-message error" role="alert">
-            <strong>Não foi possível carregar sua biblioteca.</strong>
-            <p>{{ steam.erro() }}</p>
-            <button type="button" class="refresh-button" (click)="atualizarBibliotecaSteam()">Tentar novamente</button>
+        <label
+          >Descrição breve
+          <textarea
+            formControlName="descricao"
+            rows="3"
+            placeholder="Do que se trata o jogo?"
+          ></textarea>
+        </label>
+        <div class="row">
+          <label
+            >Desenvolvedor / criador
+            <input formControlName="desenvolvedor" placeholder="Estúdio ou criador" />
+          </label>
+          <label
+            >Plataforma
+            <input formControlName="plataforma" placeholder="PC, PlayStation..." />
+          </label>
+        </div>
+        <div class="row">
+          <label
+            >Data de lançamento
+            <input type="date" formControlName="dataLancamento" />
+          </label>
+          <label
+            >Gêneros
+            <input formControlName="generos" placeholder="RPG, aventura..." />
+          </label>
+        </div>
+
+        <div class="row">
+          <label
+            >Status
+            <select formControlName="status">
+              <option value="pendente">Pendente</option>
+              <option value="jogando">Jogando</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+          </label>
+          <fieldset>
+            <legend>Nota: {{ form.controls.estrelas.value }}</legend>
+            <div class="rating">
+              @for (star of estrelas; track star) {
+                <button
+                  type="button"
+                  [attr.aria-label]="'Definir ' + star + ' estrelas'"
+                  (click)="definirEstrelas(star, $event)"
+                >
+                  <span [class]="estadoEstrela(form.controls.estrelas.value, star)">★</span>
+                </button>
+              }
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="campo-capa">
+          <label
+            >Capa do jogo
+            <input type="file" accept="image/*" (change)="selecionarArquivo($event)" />
+          </label>
+          <label
+            >ou use uma URL
+            <input type="url" formControlName="imagem" placeholder="https://..." />
+          </label>
+          @if (form.controls.imagem.value) {
+            <img class="capa-preview" [src]="form.controls.imagem.value" alt="Prévia da capa" />
+          }
+        </div>
+
+        <div class="row">
+          <label
+            >Data inicial
+            <input type="date" formControlName="dataInicial" />
+          </label>
+          <label
+            >Data final
+            <input type="date" formControlName="dataFinal" />
+          </label>
+        </div>
+        <label
+          >Horas jogadas
+          <input type="number" min="0" step="0.5" formControlName="horasJogadas" />
+        </label>
+        <div class="checks">
+          <label><input type="checkbox" formControlName="favorito" /> Favorito</label>
+          <label><input type="checkbox" formControlName="wishlist" /> Wishlist</label>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="ghost" (click)="fecharNovoJogo()">Cancelar</button>
+          <button type="submit" class="primary">Adicionar à lista</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (buscaGratisAberta()) {
+    <div class="backdrop" (click)="buscaGratisAberta.set(false)" aria-hidden="true"></div>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="free-games-title">
+      <button
+        class="close"
+        type="button"
+        (click)="buscaGratisAberta.set(false)"
+        aria-label="Fechar"
+      >
+        ×
+      </button>
+      <p class="eyebrow">FreeToGame</p>
+      <h2 id="free-games-title">Adicionar jogo grátis</h2>
+      <label
+        >Buscar jogos gratuitos
+        <input
+          type="search"
+          placeholder="Digite o nome de um jogo"
+          [value]="termoBuscaGratis()"
+          (input)="buscarJogosGratis($any($event.target).value)"
+        />
+      </label>
+      @if (buscandoGratis()) {
+        <p class="empty-copy">Buscando jogos...</p>
+      }
+      @if (mensagemBuscaGratis()) {
+        <p class="erro-busca" role="alert">{{ mensagemBuscaGratis() }}</p>
+      }
+      @if (jogosGratis().length) {
+        <div class="resultados-gratis">
+          @for (jogo of jogosGratis(); track jogo.id) {
+            <button type="button" class="resultado-gratis" (click)="adicionarJogoGratis(jogo)">
+              <img [src]="jogo.thumbnail" [alt]="'Capa de ' + jogo.title" />
+              <span>
+                <strong>{{ jogo.title }}</strong>
+                <small>{{ jogo.genre }} · {{ jogo.platform }}</small>
+                <small>{{ jogo.short_description }}</small>
+              </span>
+            </button>
+          }
+        </div>
+      } @else if (termoBuscaGratis() && !buscandoGratis() && !mensagemBuscaGratis()) {
+        <p class="empty-copy">Nenhum jogo encontrado.</p>
+      }
+    </section>
+  }
+
+  @if (jogoSelecionado(); as jogo) {
+    <div class="backdrop" (click)="fecharModal()" aria-hidden="true"></div>
+
+    <section
+      class="dialog"
+      [class.details]="!editando()"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="editando() ? 'edit-title' : 'detail-title'"
+    >
+      <button class="close" type="button" (click)="fecharModal()" aria-label="Fechar">×</button>
+
+      @if (!editando()) {
+        <img class="details-cover" [src]="jogo.imagem" [alt]="'Capa de ' + jogo.nome" />
+        <div class="details-content">
+          <p class="details-kicker">Detalhes do jogo</p>
+          <h2 id="detail-title">{{ jogo.nome }}</h2>
+          @if (carregandoDetalhesApi()) {
+            <p class="details-api-status" aria-live="polite">Buscando informações atualizadas...</p>
+          } @else if (erroDetalhesApi()) {
+            <p class="details-api-status details-api-error" role="status">
+              {{ erroDetalhesApi() }}
+            </p>
+          } @else if (!detalhesApi()) {
+            <p class="details-api-status" aria-live="polite">
+              Este título não foi encontrado no catálogo FreeToGame; exibindo os dados salvos.
+            </p>
+          } @else {
+            <p class="details-api-status">Informações atualizadas via FreeToGame</p>
+          }
+          <p class="details-description">
+            {{
+              detalhesApi()?.short_description ||
+                jogo.descricao ||
+                'Uma aventura esperando para ser descoberta.'
+            }}
+          </p>
+          <dl class="details-meta">
+            <div>
+              <dt>Desenvolvedor</dt>
+              <dd>{{ detalhesApi()?.developer || jogo.desenvolvedor || 'Não informado' }}</dd>
+            </div>
+            <div>
+              <dt>Distribuidora</dt>
+              <dd>{{ detalhesApi()?.publisher || 'Não informado' }}</dd>
+            </div>
+            <div>
+              <dt>Lançamento</dt>
+              <dd>{{ detalhesApi()?.release_date || jogo.dataLancamento || 'Não informado' }}</dd>
+            </div>
+            <div>
+              <dt>Plataforma</dt>
+              <dd>{{ detalhesApi()?.platform || jogo.plataforma || 'Não informada' }}</dd>
+            </div>
+            <div>
+              <dt>Gênero</dt>
+              <dd>
+                {{ detalhesApi()?.genre || jogo.generos?.join(', ') || 'Não informado' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ jogo.status }}</dd>
+            </div>
+            <div>
+              <dt>Início</dt>
+              <dd>{{ formatarData(jogo.dataInicial) }}</dd>
+            </div>
+            <div>
+              <dt>Conclusão</dt>
+              <dd>{{ jogo.dataFinal ? formatarData(jogo.dataFinal) : 'Em andamento' }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="dialog-actions">
+          <button type="button" class="ghost" (click)="fecharModal()">Fechar</button>
+          <button type="button" class="perigo-btn" (click)="excluirJogo(jogo.id)">
+            Excluir jogo
+          </button>
+          <button type="button" class="primary" (click)="iniciarEdicao(jogo)">
+            Editar informações
+          </button>
+        </div>
+      } @else {
+        <h2 id="edit-title">Editar jogo</h2>
+        <form [formGroup]="form" (ngSubmit)="salvarEdicao()">
+          <label
+            >Nome do jogo
+            <input formControlName="nome" placeholder="Ex.: Hollow Knight" />
+          </label>
+
+          <label
+            >Descrição breve
+            <textarea
+              formControlName="descricao"
+              rows="3"
+              placeholder="Do que se trata o jogo?"
+            ></textarea>
+          </label>
+          <div class="row">
+            <label
+              >Desenvolvedor / criador
+              <input formControlName="desenvolvedor" placeholder="Estúdio ou criador" />
+            </label>
+            <label
+              >Plataforma
+              <input formControlName="plataforma" placeholder="PC, PlayStation..." />
+            </label>
           </div>
-        } @else if (steam.carregando() && !steam.carregado()) {
-          <div class="state-message"><span class="loader"></span><p>Buscando seus jogos na Steam...</p></div>
-        } @else if (steam.carregado() && steam.jogos().length === 0) {
-          <div class="state-message">
-            <div class="empty-icon">▧</div>
-            <h3>Sua biblioteca está vazia</h3>
-            <p>A Steam não retornou jogos. Confira se os detalhes de jogos estão públicos nas configurações de privacidade da sua conta.</p>
+          <div class="row">
+            <label
+              >Data de lançamento
+              <input type="date" formControlName="dataLancamento" />
+            </label>
+            <label
+              >Gêneros
+              <input formControlName="generos" placeholder="RPG, aventura..." />
+            </label>
           </div>
-        } @else if (jogosSteam().length === 0) {
-          <div class="state-message"><h3>Nenhum resultado</h3><p>Não encontramos jogos com esse nome.</p></div>
-        } @else {
-          <div class="steam-owned-grid">
-            @for (jogo of jogosSteam(); track jogo.appId) {
-              <article class="steam-owned-card">
-                <a class="game-cover" [href]="'https://store.steampowered.com/app/' + jogo.appId" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Abrir ' + jogo.nome + ' na Steam'">
-                  <img [src]="jogo.imagem" [alt]="'Capa de ' + jogo.nome" loading="lazy" />
-                  <span class="steam-open" aria-hidden="true">↗</span>
-                </a>
-                <div class="game-info">
-                  <h3>{{ jogo.nome }}</h3>
-                  <span class="playtime">{{ jogo.horas }} h jogadas</span>
-                </div>
-              </article>
+
+          <div class="row">
+            <label
+              >Status
+              <select formControlName="status">
+                <option value="pendente">Pendente</option>
+                <option value="jogando">Jogando</option>
+                <option value="finalizado">Finalizado</option>
+              </select>
+            </label>
+
+            <fieldset>
+              <legend>Nota: {{ form.controls.estrelas.value }}</legend>
+              <div class="rating">
+                @for (star of estrelas; track star) {
+                  <button
+                    type="button"
+                    [attr.aria-label]="'Definir ' + star + ' estrelas'"
+                    (click)="definirEstrelas(star, $event)"
+                  >
+                    <span [class]="estadoEstrela(form.controls.estrelas.value, star)">★</span>
+                  </button>
+                }
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="campo-capa">
+            <label
+              >Capa do jogo
+              <input type="file" accept="image/*" (change)="selecionarArquivo($event)" />
+            </label>
+            <label
+              >ou use uma URL
+              <input type="url" formControlName="imagem" placeholder="https://..." />
+            </label>
+            @if (form.controls.imagem.value) {
+              <img class="capa-preview" [src]="form.controls.imagem.value" alt="Prévia da capa" />
             }
           </div>
-        }
-      </section>
-    }
-    <p class="lista-footnote">Os jogos são importados diretamente da Steam. A disponibilidade depende das configurações de privacidade da sua biblioteca.</p>
-  </section>
+
+          <div class="row">
+            <label
+              >Data inicial
+              <input type="date" formControlName="dataInicial" />
+            </label>
+            <label
+              >Data final
+              <input type="date" formControlName="dataFinal" />
+            </label>
+          </div>
+
+          <label
+            >Horas jogadas
+            <input type="number" min="0" step="0.5" formControlName="horasJogadas" />
+          </label>
+
+          <div class="checks">
+            <label><input type="checkbox" formControlName="favorito" /> Favorito</label>
+            <label><input type="checkbox" formControlName="wishlist" /> Wishlist</label>
+          </div>
+
+          <div class="dialog-actions">
+            <button type="button" class="ghost" (click)="fecharModal()">Cancelar</button>
+            <button type="submit" class="primary">Salvar alterações</button>
+          </div>
+        </form>
+      }
+    </section>
+  }
 </main>

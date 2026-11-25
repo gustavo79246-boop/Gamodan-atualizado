@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { API_URL } from './api.config';
+import { API_URL } from '../config/api.config';
 
 export interface SteamGame {
   appId: number;

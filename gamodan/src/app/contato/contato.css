@@ -1,9 +1,8 @@
 .contato-page {
     min-height: 100dvh;
     padding: 3rem 2rem;
-    background: radial-gradient(circle at 10% 0, #f59e0b29, transparent 30%), linear-gradient(135deg, #0b1220, #151b31);
-    color: #fff
-}
+    
+    color: #fff;background:transparent;}
 
 .contato-page>header,
 .search,
@@ -115,8 +114,7 @@
 
 @media(max-width:600px) {
     .contato-page {
-        padding: 2rem 1rem
-    }
+        padding: 2rem 1rem;background:transparent;}
 
     .search {
         flex-direction: column

@@ -1,1 +1,69 @@
-*{box-sizing:border-box}html{background:#070d1b;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{margin:0}button,input,select{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #fbbf24;outline-offset:3px}
+/* ===== Tema vidro (glassmorphism) =====
+   Os componentes usam estas variáveis; para ajustar o visual do site inteiro, mude só aqui. */
+:root {
+  color-scheme: dark;
+  --ink: #070b18;
+
+  --glass-fill: rgb(255 255 255 / 7%);
+  --glass-strong: rgb(16 22 44 / 62%);
+  --glass-pop: rgb(14 20 40 / 90%); /* menus/sugestões: ficam dentro de áreas com blur, então precisam ser quase opacos */
+  --glass-input: rgb(255 255 255 / 7%);
+  --glass-border: rgb(255 255 255 / 16%);
+  --glass-shine: inset 0 1px 0 rgb(255 255 255 / 20%), inset 0 0 0 1px rgb(255 255 255 / 4%);
+  --glass-shadow: 0 18px 50px rgb(2 6 23 / 45%);
+  --glass-blur: blur(18px) saturate(160%);
+  --glass-blur-sm: blur(12px) saturate(140%); /* listas com muitos cards: blur menor para não pesar */
+  --glass-blur-lg: blur(26px) saturate(170%);
+}
+
+/* Sem suporte a backdrop-filter ou com "reduzir transparência" ativo: superfícies quase sólidas e legíveis. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass-fill: rgb(22 30 56 / 88%); --glass-strong: rgb(16 22 44 / 96%); --glass-input: rgb(11 18 32 / 90%); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-fill: rgb(22 30 56 / 95%); --glass-strong: rgb(16 22 44 / 98%); --glass-pop: rgb(14 20 40 / 98%); --glass-input: rgb(11 18 32 / 95%); }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--ink);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: #f8fafc;
+}
+
+/* Fundo colorido fixo: é ele que aparece borrado através do vidro. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60vmax 50vmax at 12% -5%, rgb(124 58 237 / 55%), transparent 60%),
+    radial-gradient(50vmax 45vmax at 95% 10%, rgb(207 31 145 / 38%), transparent 62%),
+    radial-gradient(55vmax 45vmax at 80% 105%, rgb(249 115 22 / 34%), transparent 62%),
+    radial-gradient(45vmax 40vmax at 0% 100%, rgb(34 211 238 / 22%), transparent 60%),
+    var(--ink);
+}
+
+button, input, select, textarea { font: inherit; }
+
+::selection { background: rgb(251 191 36 / 35%); }
+::placeholder { color: rgb(203 213 225 / 55%); }
+option { background: #131a33; color: #f8fafc; }
+
+/* :root na frente para vencer os estilos dos componentes (que têm atributo de escopo). */
+:root :is(input, textarea, select):focus { border-color: rgb(251 191 36 / 75%); box-shadow: 0 0 0 3px rgb(251 191 36 / 18%); outline: none; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
+}
+:root :is(input, textarea, select):focus-visible { outline: none; }
+
+* { scrollbar-color: rgb(255 255 255 / 28%) transparent; scrollbar-width: thin; }

@@ -1,64 +1,58 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { authGuard, adminGuard } from './auth-guard';
+import { adminGuard, authGuard } from './auth-guard';
 import { AuthService } from './auth';
 
 describe('Auth Guards', () => {
-  let auth: AuthService;
-  let router: Router;
+  const urlTree = { tree: true };
+  const auth = {
+    ready: Promise.resolve(),
+    autenticado: vi.fn(),
+    admin: vi.fn(),
+    abrirModal: vi.fn(),
+  };
+  const router = { createUrlTree: vi.fn(() => urlTree) };
+
+  const rodar = (guard: typeof authGuard) =>
+    TestBed.runInInjectionContext(() => guard({} as never, {} as never)) as Promise<unknown>;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    auth.autenticado.mockReturnValue(false);
+    auth.admin.mockReturnValue(false);
     TestBed.configureTestingModule({
       providers: [
-        AuthService,
-        {
-          provide: Router,
-          useValue: {
-            createUrlTree: vi.fn(),
-          },
-        },
+        { provide: AuthService, useValue: auth },
+        { provide: Router, useValue: router },
       ],
     });
-
-    auth = TestBed.inject(AuthService);
-    router = TestBed.inject(Router);
   });
 
   describe('authGuard', () => {
-    it('deve abrir o login e bloquear o acesso quando não existe usuário autenticado', () => {
-      const abrirModal = vi.spyOn(auth, 'abrirModal');
-
-      const resultado = TestBed.runInInjectionContext(() =>
-        authGuard({} as any, {} as any)
-      );
-
-      expect(resultado).toBe(false);
-      expect(abrirModal).toHaveBeenCalledWith('entrar');
-      expect(auth.modalAberto()).toBe(true);
+    it('abre o login e bloqueia quando não há usuário autenticado', async () => {
+      expect(await rodar(authGuard)).toBe(false);
+      expect(auth.abrirModal).toHaveBeenCalledWith('entrar');
     });
 
-    it('deve permitir acesso quando existe usuário autenticado', () => {
-      vi.spyOn(auth, 'autenticado').mockReturnValue(true);
-
-      const resultado = TestBed.runInInjectionContext(() =>
-        authGuard({} as any, {} as any)
-      );
-
-      expect(resultado).toBe(true);
+    it('libera o acesso quando há usuário autenticado', async () => {
+      auth.autenticado.mockReturnValue(true);
+      expect(await rodar(authGuard)).toBe(true);
+      expect(auth.abrirModal).not.toHaveBeenCalled();
     });
   });
 
   describe('adminGuard', () => {
-    it('deve bloquear acesso quando não existe usuário autenticado', () => {
-      vi.spyOn(router, 'createUrlTree').mockReturnValue({} as any);
+    it('redireciona para a home quando o usuário não é admin (Router injetado antes do await)', async () => {
+      expect(await rodar(adminGuard)).toBe(urlTree);
+      expect(router.createUrlTree).toHaveBeenCalledWith(['/']);
+    });
 
-      const resultado = TestBed.runInInjectionContext(() =>
-        adminGuard({} as any, {} as any)
-      );
-
-      expect(resultado).toBeDefined();
+    it('libera o acesso para admin', async () => {
+      auth.admin.mockReturnValue(true);
+      expect(await rodar(adminGuard)).toBe(true);
+      expect(router.createUrlTree).not.toHaveBeenCalled();
     });
   });
 });

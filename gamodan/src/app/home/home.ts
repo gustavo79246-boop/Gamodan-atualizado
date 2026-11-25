@@ -311,8 +311,10 @@ export class Home implements OnDestroy {
     }
     this.catalogoAberto.set(true);
   }
+  private buscaApiId = 0;
   buscarJogosAPI(nome: string): void {
     const busca = nome.trim();
+    const buscaId = ++this.buscaApiId;
 
     this.termoAPIBusca.set(busca);
 
@@ -321,8 +323,10 @@ export class Home implements OnDestroy {
       return;
     }
 
-    this.freeToGame.buscarJogos(busca).subscribe({
+    this.freeToGame.buscarJogos(busca, 5).subscribe({
       next: (jogos) => {
+        // Ignora respostas antigas que chegam depois de uma busca mais nova.
+        if (buscaId !== this.buscaApiId) return;
         const termo = busca.toLowerCase();
 
         const filtrados = jogos
@@ -333,6 +337,7 @@ export class Home implements OnDestroy {
       },
 
       error: (erro) => {
+        if (buscaId !== this.buscaApiId) return;
         console.error('Erro ao buscar jogos:', erro);
         this.jogosAPI.set([]);
       },

@@ -1,10 +1,8 @@
 .perfil {
   min-height: calc(100dvh - 64px);
   padding: 3rem 1rem;
-  background:
-    radial-gradient(circle at top, #f59e0b26, transparent 35%), linear-gradient(#080f20, #101b30);
-  color: #fff;
-}
+  
+  color: #fff;background:transparent;}
 
 .card {
   width: min(100%, 800px);
@@ -12,9 +10,8 @@
   padding: 2rem;
   border: 1px solid #ffffff1e;
   border-radius: 24px;
-  background: #111b31cc;
-  box-shadow: 0 24px 70px #0005;
-}
+  
+  box-shadow: 0 24px 70px #0005;background:var(--glass-fill);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-color:var(--glass-border);box-shadow:var(--glass-shine),var(--glass-shadow);}
 
 .avatar-area {
   display: flex;
@@ -232,7 +229,7 @@
   border: 1px solid #ffffff22;
   border-radius: 10px;
   padding: 0.75rem;
-  background: #0b1220;
+  background:var(--glass-input);
   color: #fff;
   font: inherit;
 }
@@ -279,8 +276,7 @@
   }
 
   .card {
-    padding: 1.5rem;
-  }
+    padding: 1.5rem;background:var(--glass-fill);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-color:var(--glass-border);box-shadow:var(--glass-shine),var(--glass-shadow);}
 
   .avatar-area {
     flex-direction: column;

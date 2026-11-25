@@ -24,7 +24,3 @@ steam-backend/.env
 steam-backend/node_modules
 /.angular/cache
 coverage/
-steam-backend/node_modules/
-node_modules/
-dist/
-.angular/

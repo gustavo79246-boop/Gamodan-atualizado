@@ -1,17 +1,40 @@
-GAMODAN - BACKEND E LOGIN STEAM
+CONFIGURACAO RAPIDA (WINDOWS)
 
-1. Abra o terminal nesta pasta e execute: npm install
-2. Copie .env.example para .env e preencha STEAM_API_KEY.
-3. No painel da Steam (https://steamcommunity.com/dev/apikey), registre como domínio o host usado pelo seu backend.
-4. Para desenvolvimento local, mantenha exatamente:
-   STEAM_RETURN_URL=http://localhost:3000/auth/steam/return
-   STEAM_REALM=http://localhost:3000/
-   FRONTEND_URL=http://localhost:4200
-5. Inicie o MongoDB.
-6. Execute npm start.
-7. Em outro terminal, na pasta gamodan, execute npm install e npm start.
+1. Abra o PowerShell dentro da pasta steam-backend.
+2. Execute: npm install
+3. Execute: Copy-Item .env.example .env
+4. Abra .env e defina SESSION_SECRET e ADMIN_EMAILS.
+5. Confirme que o servico MongoDB esta iniciado. O padrao usa mongodb://127.0.0.1:27017/gamodan.
+6. Execute: npm run dev
+7. Em outro terminal, volte para a raiz ProjetoGamodan e execute npm install e npm start.
+8. Acesse http://localhost:4200.
 
-IMPORTANTE: abra o site usando http://localhost:4200 (não misture localhost com 127.0.0.1).
-A biblioteca da Steam só pode ser consultada se os detalhes de jogos do perfil estiverem públicos.
-Em produção, use HTTPS e configure STEAM_RETURN_URL, STEAM_REALM e FRONTEND_URL com os domínios reais.
-Nunca publique o arquivo .env ou sua chave privada da Steam.
+A API deve responder em http://localhost:3000/api/health.
+Nao compartilhe seu arquivo .env: ele contem segredos.
+
+
+INTEGRACAO STEAM E ADMINISTRACAO
+
+No arquivo steam-backend/.env (o arquivo real, nao o .env.example), confirme estas configuracoes:
+FRONTEND_URL=http://localhost:4200
+STEAM_RETURN_URL=http://localhost:3000/auth/steam/return
+STEAM_REALM=http://localhost:3000/
+
+Para liberar o painel administrativo para a conta Steam vinculada cujo SteamID e 76561199675600582, adicione:
+ADMIN_STEAM_IDS=76561199675600582
+
+Para adicionar mais administradores Steam, separe os SteamIDs por virgula. Nao compartilhe STEAM_API_KEY nem SESSION_SECRET.
+
+Para a biblioteca aparecer, na Steam abra Editar perfil > Configuracoes de privacidade e deixe Meu perfil como Publico e Detalhes dos jogos como Publico. A API so consegue listar jogos quando a Steam permite essa consulta.
+
+Depois reinicie o backend (Ctrl+C e npm run dev) e o Angular (npm start). Use sempre localhost nos dois enderecos; nao misture localhost com 127.0.0.1 no navegador.
+
+
+CORRECOES DESTA VERSAO
+- O retorno da Steam agora faz o Angular validar a sessao e abrir o perfil automaticamente.
+- A biblioteca exibida no perfil vem exclusivamente de GetOwnedGames da conta autenticada; nao ha jogos de exemplo nem fallback de catalogo.
+- Para a biblioteca aparecer, a conta Steam precisa estar com Detalhes dos jogos como Publico. Jogos ocultos/privados nao podem ser obtidos pela API.
+- A Comunidade agora permite criar publicacoes de texto (ate 1.000 caracteres), opcionalmente associadas a um jogo, e excluir as proprias publicacoes. E necessario estar conectado.
+- A rota /api/community/posts lista publicacoes reais salvas no MongoDB.
+
+IMPORTANTE: abra o Angular em http://localhost:4200 (nao 127.0.0.1) para manter o mesmo host usado no retorno e no cookie de sessao.

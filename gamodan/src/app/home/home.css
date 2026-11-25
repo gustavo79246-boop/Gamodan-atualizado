@@ -1,15 +1,12 @@
 .home {
   min-height: 100dvh;
-  background: #070d1b;
-  color: #f8fafc;
-}
+  
+  color: #f8fafc;background:transparent;}
 
 .welcome-block {
   display: flex;
   justify-content: center;
-  padding: 1.25rem clamp(1rem, 5vw, 5rem);
-  background: #000;
-}
+  padding: 1.25rem clamp(1rem, 5vw, 5rem);background:transparent;}
 
 .welcome-message {
   width: fit-content;
@@ -336,9 +333,7 @@
   margin: -0.5rem 0 0.25rem;
   padding: 0.4rem;
   border: 1px solid #ffffff22;
-  border-radius: 12px;
-  background: #0b1220;
-}
+  border-radius: 12px;background:var(--glass-pop);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-color:var(--glass-border);box-shadow:var(--glass-shine),0 18px 40px rgb(0 0 0 / 40%);}
 
 .sugestoes button {
   display: flex;
@@ -524,13 +519,12 @@
   overflow: hidden;
   border: 1px solid #ffffff18;
   border-radius: 18px;
-  background: #0d1629;
+  
   cursor: pointer;
   transition:
     transform 0.25s,
     border-color 0.25s,
-    box-shadow 0.25s;
-}
+    box-shadow 0.25s;background:var(--glass-fill);backdrop-filter:var(--glass-blur-sm);-webkit-backdrop-filter:var(--glass-blur-sm);border-color:var(--glass-border);box-shadow:var(--glass-shine),0 10px 30px rgb(2 6 23 / 30%);}
 
 .game-card img {
   width: 100%;
@@ -616,7 +610,7 @@
   border: 1px solid #ffffff18;
   border-radius: 10px;
 
-  background: #0b1220;
+  background:var(--glass-input);
   color: #fff;
 
   font: inherit;
@@ -684,10 +678,9 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: #020617c4;
+  
   backdrop-filter: blur(6px);
-  z-index: 1000;
-}
+  z-index: 1000;background:rgb(4 7 18 / 48%);backdrop-filter:blur(10px) saturate(120%);-webkit-backdrop-filter:blur(10px) saturate(120%);}
 
 .dialog {
   position: fixed;
@@ -701,10 +694,9 @@
   padding: 2rem;
   border: 1px solid #ffffff22;
   border-radius: 24px;
-  background: #111b31;
+  
   color: #f8fafc;
-  box-shadow: 0 28px 80px #000c;
-}
+  box-shadow: 0 28px 80px #000c;background:var(--glass-strong);backdrop-filter:var(--glass-blur-lg);-webkit-backdrop-filter:var(--glass-blur-lg);border-color:var(--glass-border);box-shadow:var(--glass-shine),0 30px 90px rgb(0 0 0 / 55%);}
 
 .dialog h2 {
   margin: 0.2rem 0 1.25rem;
@@ -739,7 +731,7 @@ input,
 select {
   border: 1px solid #ffffff22;
   border-radius: 10px;
-  background: #0b1220;
+  background:var(--glass-input);
   color: #fff;
   padding: 0.75rem;
   font: inherit;

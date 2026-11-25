@@ -3,7 +3,7 @@
 Aplicação Angular com API Node.js/Express e MongoDB local.
 
 ## Requisitos
-- Node.js 22.22.3 ou superior (requisito do Angular CLI usado neste projeto)
+- Node.js 20 ou superior
 - MongoDB Community Server iniciado localmente
 - npm
 
@@ -16,7 +16,7 @@ cd steam-backend
 npm install
 ```
 
-Copie `.env.example` para `.env` e preencha `STEAM_API_KEY` com sua chave da Steam. Para desenvolvimento local, mantenha os endereços de callback exatamente como no exemplo. Para MongoDB local, o padrão é:
+Copie `.env.example` para `.env` e ajuste se necessário. Para MongoDB local, o padrão é:
 
 ```env
 PORT=3000
@@ -24,9 +24,6 @@ FRONTEND_URL=http://localhost:4200
 MONGODB_URI=mongodb://127.0.0.1:27017/gamodan
 SESSION_SECRET=troque-por-uma-chave-aleatoria-grande
 ADMIN_EMAILS=seu-email@exemplo.com
-STEAM_API_KEY=sua-chave-da-steam
-STEAM_RETURN_URL=http://localhost:3000/auth/steam/return
-STEAM_REALM=http://localhost:3000/
 NODE_ENV=development
 ```
 
@@ -61,8 +58,11 @@ Acesse `http://localhost:4200`.
 - Perfil básico (foto e preferências).
 - Comentários e avaliações por jogo; cada usuário pode criar ou atualizar sua avaliação.
 - Acesso administrativo configurado por `ADMIN_EMAILS` no `.env` do backend.
-- Login Steam via OpenID, com sessão persistida no MongoDB.
-- Importação automática da biblioteca Steam (incluindo jogos gratuitos jogados), sem cadastro manual na página Minha lista.
+- Login Steam opcional, configurado com as variáveis `STEAM_API_KEY`, `STEAM_RETURN_URL` e `STEAM_REALM`.
+
+## Testes
+- Front: `npm run test:run`
+- API (não precisa do MongoDB): `cd steam-backend && npm test`
 
 ## Endpoints principais
 - `GET /api/health`
@@ -74,8 +74,11 @@ Acesse `http://localhost:4200`.
 - `GET /api/reviews/:gameSlug`
 - `PUT /api/reviews/:gameSlug`
 - `DELETE /api/reviews/:gameSlug`
+- `GET /api/users/:id/avatar` (foto de perfil como imagem, com cache)
+- `GET /api/community/posts?limit=&before=` (paginação por cursor; resposta traz `nextCursor`)
+- `GET /api/free-games?q=&limit=`, `GET /api/free-games/by-title?title=`, `GET /api/free-games/:id` (proxy com cache da FreeToGame)
 
 ## Observações
 - Comentários de demonstração dos perfis da comunidade continuam aparecendo identificados como conteúdo fictício. Comentários publicados por usuários são gravados no MongoDB.
-- A página Minha lista agora exibe exclusivamente os jogos retornados pela biblioteca Steam. A Steam precisa permitir a visualização dos detalhes dos jogos para que a API consiga importar a biblioteca.
-- Para publicar em produção, configure HTTPS, `NODE_ENV=production`, um segredo forte e `FRONTEND_URL` com o domínio real do frontend. Se frontend e API estiverem em domínios diferentes, configure `GAMODAN_API_URL` antes do carregamento do Angular e revise a política de cookies `SameSite` e `Secure`. Nunca compartilhe o arquivo `.env` nem a chave privada da Steam.
+- A lista pessoal de jogos e o catálogo administrativo ainda usam armazenamento local do navegador; não devem ser considerados sincronizados entre dispositivos nesta etapa.
+- Para publicar em produção, configure HTTPS, `NODE_ENV=production`, um segredo forte e `FRONTEND_URL` com o domínio real do frontend. Se frontend e API estiverem em domínios diferentes, revise a política de cookies `SameSite` e `Secure`.

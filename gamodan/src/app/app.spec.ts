@@ -1,199 +1,55 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-import { of, throwError } from 'rxjs';
+import { Router } from '@angular/router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { App } from './app';
-import { GameService } from './services/game.service';
+import { AuthService } from './services/auth';
 
 describe('App', () => {
+  const auth = { abrirModal: vi.fn(), sincronizarSessao: vi.fn() };
+  const router = { navigateByUrl: vi.fn() };
 
-  let component: App;
-  let gameService: GameService;
+  const criarApp = (search: string) => {
+    window.history.replaceState({}, '', `/${search}`);
+    return TestBed.runInInjectionContext(() => new App());
+  };
 
   beforeEach(() => {
-
+    vi.clearAllMocks();
+    auth.sincronizarSessao.mockResolvedValue(true);
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [GameService]
+      providers: [
+        { provide: AuthService, useValue: auth },
+        { provide: Router, useValue: router },
+      ],
     });
-
-    gameService = TestBed.inject(GameService);
-
-    component = new App(gameService);
   });
 
-  it('deve criar o componente', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => window.history.replaceState({}, '', '/'));
+
+  it('cria o componente sem mexer no login quando não há parâmetro', () => {
+    expect(criarApp('')).toBeTruthy();
+    expect(auth.sincronizarSessao).not.toHaveBeenCalled();
+    expect(auth.abrirModal).not.toHaveBeenCalled();
   });
 
-  // --- Testes da função pesquisar() ---
-
-  it('não deve pesquisar se a busca estiver vazia', () => {
-
-    const spy = vi.spyOn(gameService, 'buscarJogos');
-
-    component.busca = '   ';
-
-    component.pesquisar();
-
-    expect(spy).not.toHaveBeenCalled();
+  it('abre o modal de login quando a Steam volta com erro e limpa a URL', () => {
+    criarApp('?login=erro');
+    expect(auth.abrirModal).toHaveBeenCalledWith('entrar');
+    expect(window.location.search).toBe('');
   });
 
-  it('deve pesquisar jogos com sucesso e atualizar a lista', () => {
-
-    const mockResponse = [
-      {
-        id: 1,
-        title: 'Zelda',
-        thumbnail: 'https://exemplo.com/zelda.jpg',
-        short_description: 'Descrição do jogo Zelda.',
-        game_url: 'https://exemplo.com/zelda',
-        genre: 'Action',
-        platform: 'PC (Windows)',
-        publisher: 'Nintendo',
-        developer: 'Nintendo',
-        release_date: '2026-01-01'
-      }
-    ];
-
-    vi.spyOn(gameService, 'buscarJogos')
-      .mockReturnValue(of(mockResponse));
-
-    component.busca = 'Zelda';
-
-    component.pesquisar();
-
-    expect(component.jogos()).toEqual(mockResponse);
-
-    expect(component.carregando()).toBe(false);
+  it('revalida a sessão e abre o perfil quando a Steam volta com sucesso', async () => {
+    criarApp('?login=sucesso');
+    await vi.waitFor(() => expect(router.navigateByUrl).toHaveBeenCalledWith('/perfil'));
+    expect(auth.sincronizarSessao).toHaveBeenCalled();
+    expect(window.location.search).toBe('');
   });
 
-  it('deve tratar erro ao pesquisar jogos', () => {
-
-    vi.spyOn(gameService, 'buscarJogos')
-      .mockReturnValue(
-        throwError(() => new Error('Erro API'))
-      );
-
-    component.busca = 'Mario';
-
-    component.pesquisar();
-
-    expect(component.erro())
-      .toBe('Não foi possível buscar os jogos.');
-
-    expect(component.carregando()).toBe(false);
+  it('abre o modal de login se a sessão não puder ser confirmada', async () => {
+    auth.sincronizarSessao.mockResolvedValue(false);
+    criarApp('?login=sucesso');
+    await vi.waitFor(() => expect(auth.abrirModal).toHaveBeenCalledWith('entrar'));
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
-
-  // --- Testes da função onNomeInput() ---
-
-  it('deve limpar as sugestões se o nome digitado for menor que 3 caracteres', () => {
-
-    const event = {
-      target: {
-        value: 'ab'
-      }
-    } as unknown as Event;
-
-    component.onNomeInput(event);
-
-    expect(component.sugestoes()).toEqual([]);
-
-    expect(component.buscandoJogos()).toBe(false);
-  });
-
-  it('deve buscar sugestões com sucesso na FreeToGame', () => {
-
-    const mockResponse = [
-      {
-        id: 1,
-        title: 'Zelda',
-        thumbnail: 'img.jpg',
-        short_description: 'Descrição do Zelda',
-        game_url: 'https://exemplo.com/zelda',
-        genre: 'Action',
-        platform: 'PC (Windows)',
-        publisher: 'Nintendo',
-        developer: 'Nintendo',
-        release_date: '2026-01-01'
-      },
-      {
-        id: 2,
-        title: 'Zelda Online',
-        thumbnail: 'img2.jpg',
-        short_description: 'Outro jogo Zelda',
-        game_url: 'https://exemplo.com/zelda-online',
-        genre: 'MMORPG',
-        platform: 'PC (Windows)',
-        publisher: 'Nintendo',
-        developer: 'Nintendo',
-        release_date: '2026-02-01'
-      }
-    ];
-
-    vi.spyOn(gameService, 'buscarJogos')
-      .mockReturnValue(of(mockResponse));
-
-    const event = {
-      target: {
-        value: 'Zelda'
-      }
-    } as unknown as Event;
-
-    component.onNomeInput(event);
-
-    expect(component.sugestoes().length).toBe(2);
-
-    expect(component.sugestoes()[0].nome)
-      .toBe('Zelda');
-
-    expect(component.sugestoes()[0].descricao)
-      .toBe('Descrição do Zelda');
-
-    expect(component.buscandoJogos()).toBe(false);
-  });
-
-  it('deve tratar erro ao buscar sugestões', () => {
-
-    vi.spyOn(gameService, 'buscarJogos')
-      .mockReturnValue(
-        throwError(() => new Error('Erro API'))
-      );
-
-    const event = {
-      target: {
-        value: 'Zelda'
-      }
-    } as unknown as Event;
-
-    component.onNomeInput(event);
-
-    expect(component.sugestoes()).toEqual([]);
-
-    expect(component.buscandoJogos()).toBe(false);
-  });
-
-  it('deve lidar com uma resposta vazia da FreeToGame', () => {
-
-    const mockResponse: any[] = [];
-
-    vi.spyOn(gameService, 'buscarJogos')
-      .mockReturnValue(of(mockResponse));
-
-    const event = {
-      target: {
-        value: 'Zelda'
-      }
-    } as unknown as Event;
-
-    component.onNomeInput(event);
-
-    expect(component.sugestoes()).toEqual([]);
-
-    expect(component.buscandoJogos()).toBe(false);
-  });
-
 });

@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../services/auth';
-import { API_URL } from '../services/api.config';
+import { API_URL } from '../config/api.config';
 
 interface CommunityComment {
   id: string; username: string; avatar: string; text: string; createdAt: string; isMine?: boolean;
@@ -21,7 +20,7 @@ interface CommunityPerson {
 
 @Component({
   selector: 'app-community',
-  imports: [RouterLink, FormsModule],
+  imports: [FormsModule],
   templateUrl: './community.html',
   styleUrl: './community.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

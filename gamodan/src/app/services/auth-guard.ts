@@ -11,7 +11,9 @@ export const authGuard: CanActivateFn = async () => {
 };
 
 export const adminGuard: CanActivateFn = async () => {
+  // inject() só funciona de forma síncrona: o Router precisa ser obtido ANTES do await.
   const auth = inject(AuthService);
+  const router = inject(Router);
   await auth.ready;
-  return auth.admin() || inject(Router).createUrlTree(['/']);
+  return auth.admin() || router.createUrlTree(['/']);
 };

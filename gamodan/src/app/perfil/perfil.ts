@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth';
 import { GameService } from '../services/game';
@@ -47,11 +47,7 @@ export class Perfil {
   readonly preferenciasSalvas = signal(false);
 
   constructor() {
-    effect(() => {
-      if (this.auth.usuario()?.steamLinked && !this.steam.carregado() && !this.steam.carregando()) {
-        void this.steam.carregar();
-      }
-    });
+    if (this.auth.usuario()?.steamLinked) void this.steam.carregar();
   }
 
   carregarJogosSteam(): void { void this.steam.carregar(); }
